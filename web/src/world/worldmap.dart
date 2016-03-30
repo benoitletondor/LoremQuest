@@ -36,8 +36,12 @@ class WorldMap {
   WorldConfiguration _processString(String jsonString) {
     List<List<Map>> lines = JSON.decode(jsonString);
 
+    int x = 1;
+    int y = 1;
+
     _elements = new List();
-    int largestLine = 0;
+    int playerX = 0;
+    int playerY = 0;
 
     for (List<Map> line in lines) {
       List<Element> lineElements = new List();
@@ -60,17 +64,36 @@ class WorldMap {
             throw new Exception("Unknown type: $type");
         }
 
-        lineElements.add(elem);
-      }
+        if (element.containsKey("contains")) {
+          List<Map<String, dynamic>> containedList = element["contains"];
 
-      if (lineElements.length > largestLine) {
-        largestLine = lineElements.length;
+          for (Map<String, dynamic> contained in containedList) {
+            String containedType = contained["type"] as String;
+
+            switch (containedType) {
+              case "Player":
+                playerX = x;
+                playerY = y;
+                break;
+            }
+          }
+        }
+
+        lineElements.add(elem);
+        x++;
       }
 
       _elements.add(lineElements);
+      y++;
+      x = 1;
     }
 
-    return new WorldConfiguration(largestLine, _elements.length);
+    if (playerX == 0 && playerY == 0) {
+      throw new Exception("Player not found");
+    }
+
+    return new WorldConfiguration(
+        _elements[0].length, _elements.length, playerX, playerY);
   }
 }
 
@@ -78,5 +101,8 @@ class WorldConfiguration {
   int width;
   int height;
 
-  WorldConfiguration(int this.width, this.height) {}
+  int playerX;
+  int playerY;
+
+  WorldConfiguration(int this.width, this.height, this.playerX, this.playerY) {}
 }

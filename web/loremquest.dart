@@ -46,7 +46,9 @@ void main() {
     stage.debugInCanvas(canvas);*/
 
     player = new LevelUp.PixiPhysicsItem(new Player())
-      ..position = new PIXI.Point.fromValues(300, 200);
+      ..position = new PIXI.Point.fromValues(
+          configuration.playerX * Element.SIZE,
+          configuration.playerY * Element.SIZE);
 
     stage.setCameraFocus(player, 320, 240);
 
