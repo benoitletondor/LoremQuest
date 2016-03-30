@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LoremQuest</title>
+    
+    <script async type="application/dart" src="loremquest.dart"></script>
+    <script async src="packages/browser/dart.js"></script>
+    <script src="packages/pixi2dart/js/pixi.min.js"></script>
+    
+    <style>
+    	#stage {
+		    width: 640px;
+		    height: 480px;
+		    margin: auto;
+		    overflow: hidden;
+		    display: block;
+		    position: relative;
+		}
+		
+		#container {
+			width: 640px;
+		    height: 480px;
+		}
+		
+		#debug {
+			position:absolute; 
+			left:0; 
+			top:0; 
+			padding:0; 
+			margin:0;
+			width: 640px;
+		    height: 480px;
+		}
+    </style>
+  </head>
+  <body>
+    <h1>LoremQuest</h1>
+    
+    <div id="stage">
+    	<div id="container"></div>
+    	<div id="debug"></div>
+    </div>
+    
+    
+
+  </body>
+</html>

@@ -1,0 +1,8 @@
+name: LoremQuest
+description: An RPG game in the making
+author: Benoit Letondor
+dependencies:
+  browser: any
+  levelup:
+    version: any
+    path: ../levelup/
