@@ -12,15 +12,19 @@ import 'package:box2d/box2d_browser.dart';
 
 part 'src/logger.dart';
 part 'src/player.dart';
+part 'src/ia.dart';
 part 'src/world/worldmap.dart';
 part 'src/world/element.dart';
+part 'src/world/mob.dart';
 part 'src/world/elements/ground.dart';
 part 'src/world/elements/wall.dart';
 part 'src/world/elements/void.dart';
+part 'src/world/mobs/basic.dart';
 
 LevelUp.GameStage stage;
 WorldMap world;
 LevelUp.PixiPhysicsItem<Player> player;
+IA ia;
 
 void main() {
   world = new WorldMap("level1");
@@ -55,6 +59,19 @@ void main() {
     world.draw(stage);
     stage.addChild(player);
 
+    List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
+
+    for (Mob mob in configuration.mobs) {
+      LevelUp.PixiPhysicsItem mobItem = new LevelUp.PixiPhysicsItem(mob)
+        ..position = new PIXI.Point.fromValues(
+            mob.mapX * Element.SIZE, mob.mapY * Element.SIZE);
+
+      mobs.add(mobItem);
+      stage.addChild(mobItem);
+    }
+
+    ia = new IA(player, mobs);
+
     html.Rectangle clientRect = stage.view.getBoundingClientRect();
 
     html.window.onResize.listen((e) {
@@ -62,21 +79,13 @@ void main() {
     });
 
     html.document.onClick.listen((html.MouseEvent e) {
-      math.Point playerPosition =
-          new math.Point(player.body.position.x, player.body.position.y);
       math.Point clickPosition = new math.Point(
           e.client.x - clientRect.left + stage.cameraX,
           e.client.y - clientRect.top + stage.cameraY);
 
-      num angle = LevelUp.MathHelper
-          .radianAngleBetweenMouseAndObject(clickPosition, playerPosition);
 
-      player.item.destination = clickPosition;
-      player.body.setTransform(player.body.position, angle);
-      player.body.applyLinearImpulse(
-          new Vector2(math.sin(angle) * 20000, -math.cos(angle) * 20000),
-          new Vector2(player.body.worldCenter.x, player.body.worldCenter.y),
-          true);
+
+      player.item.moveTo(clickPosition);
     });
   });
 }
@@ -84,8 +93,20 @@ void main() {
 class _ContactListener implements LevelUp.StageContactListener {
   void onContactBegin(
       LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {
-    if ((spriteA.item is Player) || (spriteB.item is Player)) {
+    if ((spriteA.item is Player) && !(spriteB.item is Mob)) {
       player.item.stop();
+    }
+
+    if ((spriteB.item is Player) && !(spriteA.item is Mob)) {
+      player.item.stop();
+    }
+
+    if ((spriteA.item is Mob) && !(spriteB.item is Mob)) {
+      spriteA.item.stop();
+    }
+
+    if ((spriteB.item is Mob) && !(spriteA.item is Mob)) {
+      spriteB.item.stop();
     }
   }
 

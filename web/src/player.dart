@@ -4,7 +4,11 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   static const int CATEGORY_BITS = 0x1;
   static const int SIZE = 20;
 
+  static const int BASE_SPEED = 100000;
+
+  @override
   Body body;
+
   bool _watching = false;
   math.Point _destination;
 
@@ -15,6 +19,7 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
 
 // ------------------------------------------------------->
 
+  @override
   FixtureDef buildFixtureDef() {
     double semiSize = (SIZE / 2).toDouble();
 
@@ -22,19 +27,25 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
 
     Filter filter = new Filter()
       ..categoryBits = CATEGORY_BITS
-      ..maskBits = Wall.CATEGORY_BITS;
+      ..maskBits = WallElement.CATEGORY_BITS | Mob.CATEGORY_BITS;
 
     return new FixtureDef()
       ..shape = shape
-      ..density = 0.0
+      ..density = 10.0
       ..restitution = 0.0
       ..friction = 0.0
       ..filter = filter;
   }
 
-  BodyDef get bodyDef => new BodyDef()..type = BodyType.DYNAMIC;
+  @override
+  BodyDef get bodyDef => new BodyDef()
+    ..type = BodyType.STATIC
+    ..fixedRotation = true;
 
   stop() {
+    _destination = null;
+    body.setType(BodyType.STATIC);
+
     if (body.linearVelocity.x != 0.0 || body.linearVelocity.y != 0.0) {
       body.linearVelocity = new Vector2(0.0, 0.0);
     }
@@ -46,16 +57,29 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
     _unsubscribe();
   }
 
-  void set destination(math.Point destination) {
+  void moveTo(math.Point destination) {
     _destination = destination;
+    body.setType(BodyType.DYNAMIC);
     _subscribe();
   }
 
   _renderLoop(num dt) {
-    if (_destination != null &&
-        (body.position.x - _destination.x).abs() < 5.0 &&
-        (body.position.y - _destination.y).abs() < 5.0) {
-      stop();
+    if (_destination != null) {
+      if ((body.position.x - _destination.x).abs() < 5.0 &&
+          (body.position.y - _destination.y).abs() < 5.0) {
+        stop();
+      } else {
+        math.Point playerPosition =
+            new math.Point(body.position.x, body.position.y);
+
+        num angle = LevelUp.MathHelper
+            .radianAngleBetween2Objects(_destination, playerPosition);
+
+        body.setTransform(body.position, angle);
+        body.linearVelocity = new Vector2(
+            math.sin(angle) * Player.BASE_SPEED,
+            -math.cos(angle) * Player.BASE_SPEED);
+      }
     }
   }
 

@@ -4,6 +4,10 @@ class WorldMap {
   String _name;
   List<List<Element>> _elements;
 
+  List<Mob> _mobs;
+  int playerX = 0;
+  int playerY = 0;
+
   WorldMap(String this._name) {}
 
   Future<WorldConfiguration> load() async {
@@ -40,43 +44,31 @@ class WorldMap {
     int y = 1;
 
     _elements = new List();
-    int playerX = 0;
-    int playerY = 0;
+    _mobs = new List();
 
     for (List<Map> line in lines) {
       List<Element> lineElements = new List();
 
       for (Map<String, dynamic> element in line) {
-        String type = element["type"] as String;
+        String type = element["type"];
 
         Element elem;
         switch (type) {
           case "GROUND":
-            elem = new Ground();
+            elem = new GroundElement();
             break;
           case 'WALL':
-            elem = new Wall();
+            elem = new WallElement();
             break;
           case 'VOID':
-            elem = new Void();
+            elem = new VoidElement();
             break;
           default:
             throw new Exception("Unknown type: $type");
         }
 
         if (element.containsKey("contains")) {
-          List<Map<String, dynamic>> containedList = element["contains"];
-
-          for (Map<String, dynamic> contained in containedList) {
-            String containedType = contained["type"] as String;
-
-            switch (containedType) {
-              case "Player":
-                playerX = x;
-                playerY = y;
-                break;
-            }
-          }
+          _parseContained(element["contains"], x, y);
         }
 
         lineElements.add(elem);
@@ -93,7 +85,35 @@ class WorldMap {
     }
 
     return new WorldConfiguration(
-        _elements[0].length, _elements.length, playerX, playerY);
+        _elements[0].length, _elements.length, playerX, playerY, _mobs);
+  }
+
+  _parseContained(List<Map<String, dynamic>> containedList, int x, int y) {
+    for (Map<String, dynamic> contained in containedList) {
+      String containedType = contained["type"];
+
+      switch (containedType) {
+        case "Player":
+          playerX = x;
+          playerY = y;
+          break;
+        case "Mob":
+          _parseMob(contained, x, y);
+          break;
+      }
+    }
+  }
+
+  _parseMob(Map<String, dynamic> contained, int x, int y) {
+    String mobKind = contained["kind"];
+
+    switch (mobKind) {
+      case "BASIC":
+        _mobs.add(new BasicMob(x, y));
+        break;
+      default:
+        throw new Exception("Unknown mob kind: $mobKind");
+    }
   }
 }
 
@@ -104,5 +124,8 @@ class WorldConfiguration {
   int playerX;
   int playerY;
 
-  WorldConfiguration(int this.width, this.height, this.playerX, this.playerY) {}
+  List<Mob> mobs;
+
+  WorldConfiguration(
+      int this.width, this.height, this.playerX, this.playerY, this.mobs) {}
 }

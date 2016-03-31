@@ -11,10 +11,13 @@ abstract class Element extends PIXI.Graphics implements LevelUp.PhysicsItem {
 
   int get categoryBit;
 
+  @override
   Body body;
 
+  @override
   BodyDef get bodyDef => new BodyDef()..type = BodyType.KINEMATIC;
 
+  @override
   FixtureDef buildFixtureDef() {
     double semiSize = (Element.SIZE / 2).toDouble();
 
