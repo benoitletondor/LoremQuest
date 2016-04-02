@@ -17,6 +17,10 @@ class IA implements LevelUp.StageContactListener {
     LevelUp.RenderingManager.scheduleRenderingAction(_renderLoop);
   }
 
+  destroy() {
+    LevelUp.RenderingManager.unscheduleRenderingAction(_renderLoop);
+  }
+
   _renderLoop(num dt) {
     if (dt - timeSinceSync < 200) {
       // No more than once per 200 ms
@@ -94,7 +98,7 @@ class IA implements LevelUp.StageContactListener {
   }
 
   resolveClick(math.Point clickPosition) {
-    List<LevelUp.PhysicsItem> itemsAtPoint = stage.getItemsInZone(
+    List<LevelUp.PhysicsItem> itemsAtPoint = _stage.getItemsInZone(
         new math.Rectangle(clickPosition.x, clickPosition.y, 0, 0));
 
     bool targetFound = false;

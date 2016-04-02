@@ -22,28 +22,27 @@ part 'src/world/elements/wall.dart';
 part 'src/world/elements/void.dart';
 part 'src/world/mobs/basic.dart';
 
-LevelUp.GameStage stage;
-WorldMap world;
-LevelUp.PixiPhysicsItem<Player> player;
-IA ia;
-LevelUp.PixiItem<PIXI.Text> scoreText;
-
 void main() {
-  world = new WorldMap("level1");
+  _loadWorld("level1");
+}
+
+_loadWorld(String worldName) {
+  WorldMap world = new WorldMap(worldName);
   world.load().then((WorldConfiguration configuration) {
     int worldSizeX = configuration.width * Element.SIZE;
     int worldSizeY = configuration.height * Element.SIZE;
 
-    player = new LevelUp.PixiPhysicsItem(new Player(_onPlayerHealthChanged))
-      ..position = new PIXI.Point.fromValues(
-          configuration.playerX * Element.SIZE,
-          configuration.playerY * Element.SIZE);
+    LevelUp.PixiPhysicsItem<Player> player =
+        new LevelUp.PixiPhysicsItem(new Player())
+          ..position = new PIXI.Point.fromValues(
+              configuration.playerX * Element.SIZE,
+              configuration.playerY * Element.SIZE);
 
     List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
 
-    ia = new IA(player, mobs);
+    IA ia = new IA(player, mobs);
 
-    stage = new LevelUp.GameStage(
+    LevelUp.GameStage stage = new LevelUp.GameStage(
         new LevelUp.PixiRenderer(PIXI.autoDetectRenderer(640, 480)),
         ia,
         new LevelUp.Camera(
@@ -74,8 +73,8 @@ void main() {
       stage.addChild(mobItem);
     }
 
-    scoreText = new LevelUp.PixiItem(new PIXI.Text(
-        "Life: ${player.item.health}",
+    LevelUp.PixiItem<PIXI.Text> scoreText = new LevelUp.PixiItem(new PIXI.Text(
+        "Life: ${Player.BASE_HEALTH}",
         new PIXI.TextStyle("24px Arial", tint: 0xFF00FF)))
       ..position = new PIXI.Point.fromValues(5, 5);
     stage.addChild(scoreText);
@@ -84,20 +83,41 @@ void main() {
 
     html.Rectangle clientRect = stage.view.getBoundingClientRect();
 
-    html.window.onResize.listen((e) {
+    StreamSubscription resizeSubscription = html.window.onResize.listen((e) {
       clientRect = stage.view.getBoundingClientRect();
     });
 
-    html.document.onClick.listen((html.MouseEvent e) {
+    StreamSubscription clickSubscription =
+        html.document.onClick.listen((html.MouseEvent e) {
       math.Point clickPosition = new math.Point(
           e.client.x - clientRect.left + stage.cameraX,
           e.client.y - clientRect.top + stage.cameraY);
 
       ia.resolveClick(clickPosition);
     });
+
+    player.item.healthListener = ((int health) {
+      if (health <= 0) {
+        _destroyWorld(stage, ia, resizeSubscription, clickSubscription);
+        _loadWorld("level1");
+        return;
+      }
+
+      scoreText.item.text = "Life: ${health}";
+    });
   });
 }
 
-_onPlayerHealthChanged(int health) {
-  scoreText.item.text = "Life: ${health}";
+_destroyWorld(
+    LevelUp.GameStage stage,
+    IA ia,
+    StreamSubscription resizeSubscription,
+    StreamSubscription clickSubscription) {
+  html.querySelector('#container').children.clear();
+
+  resizeSubscription.cancel();
+  clickSubscription.cancel();
+
+  ia.destroy();
+  stage.destroy();
 }

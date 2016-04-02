@@ -5,7 +5,7 @@ typedef void HealthChangeListener(int health);
 class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   static const int CATEGORY_BITS = 0x1;
   static const int SIZE = 20;
-
+  static const int BASE_HEALTH = 1000;
   static const int BASE_SPEED = 100000;
 
   @override
@@ -16,18 +16,18 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   Mob target = null;
 
   HealthChangeListener _healthListener;
-  int _health = 1000;
+  int _health = BASE_HEALTH;
   int get health => _health;
   set health(int value) {
     _health = value;
-    _healthListener(value);
+    if( _healthListener != null ) {
+      _healthListener(value);
+    }
   }
 
   int get attackPower => 50;
 
-  Player(HealthChangeListener this._healthListener) : super() {
-    assert(_healthListener != null);
-
+  Player() : super() {
     beginFill(0xFF00FF);
     drawRect(-SIZE / 2, -SIZE / 2, SIZE, SIZE);
   }
@@ -56,6 +56,9 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   BodyDef get bodyDef => new BodyDef()
     ..type = BodyType.STATIC
     ..fixedRotation = true;
+
+  set healthListener(HealthChangeListener listener) =>
+    _healthListener = listener;
 
   stop() {
     _destination = null;
