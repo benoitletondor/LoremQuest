@@ -9,9 +9,15 @@ class SpiderMob extends Mob {
     new PIXI.Rectangle.fromValues(FRAME_WIDTH*7, 0, FRAME_WIDTH, 41),
     new PIXI.Rectangle.fromValues(FRAME_WIDTH*8, 0, FRAME_WIDTH, 41)
   ];
+  static List<PIXI.Rectangle> attackingFrames = <PIXI.Rectangle>[
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*0, 0, FRAME_WIDTH, 41),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*1, 0, FRAME_WIDTH, 41),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*2, 0, FRAME_WIDTH, 41),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*3, 0, FRAME_WIDTH, 41)
+  ];
 
   SpiderMob(PIXI.Texture texture, int mapX, int mapY)
-      : super(texture, MobType.BASIC, mapX, mapY) {
+      : super(texture, MobType.SPIDER, mapX, mapY) {
     width /= 2;
     height /= 2;
   }
@@ -30,4 +36,7 @@ class SpiderMob extends Mob {
 
   @override
   List<PIXI.Rectangle> get _frames => frames;
+
+  @override
+  List<PIXI.Rectangle> get _attackingFrames => attackingFrames;
 }

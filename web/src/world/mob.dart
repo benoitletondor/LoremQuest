@@ -18,6 +18,7 @@ abstract class Mob extends PIXI.Sprite
   int get attackPower => BASE_POWER * _powerMultiplier;
 
   int _frameIndex = 0;
+  int _attackingFrameIndex = 0;
   num _lastFrameUpdate = 0;
 
   MobType get type => _type;
@@ -25,7 +26,7 @@ abstract class Mob extends PIXI.Sprite
   int get mapY => _mapY;
 
   Mob(PIXI.Texture texture, MobType this._type, this._mapX, this._mapY)
-      : super(texture) {
+      : super(texture.clone()) {
     this.anchor = new PIXI.Point.fromValues(0.5, 0.5);
   }
 
@@ -34,6 +35,7 @@ abstract class Mob extends PIXI.Sprite
   int get _powerMultiplier;
   int health;
   List<PIXI.Rectangle> get _frames;
+  List<PIXI.Rectangle> get _attackingFrames;
 
   @override
   Body body;
@@ -71,7 +73,19 @@ abstract class Mob extends PIXI.Sprite
   }
 
   frameAnimation(num dt) {
-    if( body.linearVelocity.x != 0.0 || body.linearVelocity.y != 0.0 ) {
+    if( attacking ) {
+      if (dt - _lastFrameUpdate >= (attackTiming / 4)) {
+        _lastFrameUpdate = dt;
+
+        _attackingFrameIndex++;
+        if( _attackingFrameIndex >= _attackingFrames.length ) {
+          _attackingFrameIndex = 0;
+        }
+
+        texture.frame = _attackingFrames[_attackingFrameIndex];
+      }
+    }
+    else if( body.linearVelocity.x != 0.0 || body.linearVelocity.y != 0.0 ) {
       if (dt - _lastFrameUpdate >= (100 * _speedMultiplier)) {
         _lastFrameUpdate = dt;
 
@@ -86,4 +100,4 @@ abstract class Mob extends PIXI.Sprite
   }
 }
 
-enum MobType { BASIC }
+enum MobType { SPIDER }
