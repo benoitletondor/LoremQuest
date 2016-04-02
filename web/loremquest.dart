@@ -16,6 +16,7 @@ part 'src/ia.dart';
 part 'src/world/worldmap.dart';
 part 'src/world/element.dart';
 part 'src/world/mob.dart';
+part 'src/world/clickable.dart';
 part 'src/world/elements/ground.dart';
 part 'src/world/elements/wall.dart';
 part 'src/world/elements/void.dart';
@@ -83,7 +84,16 @@ void main() {
           e.client.x - clientRect.left + stage.cameraX,
           e.client.y - clientRect.top + stage.cameraY);
 
+      List<LevelUp.PhysicsItem> itemsAtPoint = stage.getItemsInZone(
+          new math.Rectangle(clickPosition.x, clickPosition.y, 0, 0));
 
+      for (LevelUp.PhysicsItem physicItem in itemsAtPoint) {
+        if (physicItem is LevelUp.PixiPhysicsItem &&
+            physicItem.item is Clickable) {
+          Logger.debug("Found item: ${physicItem.item}");
+          return;
+        }
+      }
 
       player.item.moveTo(clickPosition);
     });

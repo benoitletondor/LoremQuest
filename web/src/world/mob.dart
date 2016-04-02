@@ -1,6 +1,6 @@
 part of rpg;
 
-abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem {
+abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickable {
   static const int CATEGORY_BITS = 1 << 3;
   static const int BASE_SPEED = 50;
 
