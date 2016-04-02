@@ -1,5 +1,7 @@
 part of rpg;
 
+typedef void HealthChangeListener(int health);
+
 class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   static const int CATEGORY_BITS = 0x1;
   static const int SIZE = 20;
@@ -10,10 +12,22 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   Body body;
 
   bool _watching = false;
-  math.Point _destination;
-  Mob target;
+  math.Point _destination = null;
+  Mob target = null;
 
-  Player() : super() {
+  HealthChangeListener _healthListener;
+  int _health = 1000;
+  int get health => _health;
+  set health(int value) {
+    _health = value;
+    _healthListener(value);
+  }
+
+  int get attackPower => 50;
+
+  Player(HealthChangeListener this._healthListener) : super() {
+    assert(_healthListener != null);
+
     beginFill(0xFF00FF);
     drawRect(-SIZE / 2, -SIZE / 2, SIZE, SIZE);
   }

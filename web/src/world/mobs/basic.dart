@@ -12,8 +12,14 @@ class BasicMob extends Mob {
   int get size => SIZE;
 
   @override
-  int get speed => 1;
+  int get _speedMultiplier => 1;
 
   @override
   int get _attackRate => 1;
+
+  @override
+  int get _powerMultiplier => 5;
+
+  @override
+  int health = 100;
 }

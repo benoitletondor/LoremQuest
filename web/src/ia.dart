@@ -3,13 +3,17 @@ part of rpg;
 class IA implements LevelUp.StageContactListener {
   LevelUp.PixiPhysicsItem<Player> _player;
   List<LevelUp.PixiPhysicsItem<Mob>> _mobs;
+  LevelUp.GameStage _stage;
   num timeSinceSync = 0.0;
 
   IA(LevelUp.PixiPhysicsItem<Player> this._player,
       List<LevelUp.PixiPhysicsItem<Mob>> this._mobs) {
     assert(_player != null);
     assert(_mobs != null);
+  }
 
+  onStageReady(LevelUp.GameStage stage) {
+    _stage = stage;
     LevelUp.RenderingManager.scheduleRenderingAction(_renderLoop);
   }
 
@@ -35,8 +39,8 @@ class IA implements LevelUp.StageContactListener {
 
           mob.body.setTransform(mob.body.position, angle);
           mob.body.linearVelocity = new Vector2(
-              math.sin(angle) * mob.item.speed * Mob.BASE_SPEED,
-              -math.cos(angle) * mob.item.speed * Mob.BASE_SPEED);
+              math.sin(angle) * mob.item.speed,
+              -math.cos(angle) * mob.item.speed);
           break;
         case MobPosition.FAR:
           mob.item.stop();
@@ -49,15 +53,14 @@ class IA implements LevelUp.StageContactListener {
       if (mob.item.attacking &&
           (dt - mob.item.lastAttackTime) >= mob.item.attackTiming) {
         mob.item.lastAttackTime = dt;
-        Logger.debug("${mob.item} attacks Player");
+        _handleMobAttacksPlayer(mob);
       }
     }
   }
 
   MobPosition _getMobPositionVsPlayer(math.Point mobPosition,
       math.Point playerPosition, LevelUp.PixiPhysicsItem<Mob> mob) {
-    // FIXME find a better way to get a stage reference
-    Contact contact = stage.getContactBetweenItems(mob, _player);
+    Contact contact = _stage.getContactBetweenItems(mob, _player);
     if (contact != null) {
       mob.item.attacking = true;
       return MobPosition.TOUCHING;
@@ -76,7 +79,21 @@ class IA implements LevelUp.StageContactListener {
     return MobPosition.FAR;
   }
 
-  resolveClick(math.Point clickPosition, LevelUp.GameStage stage) {
+  _handlePlayerAttacksMob(LevelUp.PixiPhysicsItem<Mob> mob) {
+    mob.item.health -= _player.item.attackPower;
+    Logger.debug("Mob hit. Life: ${mob.item.health}");
+
+    if (mob.item.health <= 0) {
+      _mobs.remove(mob);
+      _stage.removeChild(mob);
+    }
+  }
+
+  _handleMobAttacksPlayer(LevelUp.PixiPhysicsItem<Mob> mob) {
+    _player.item.health -= mob.item.attackPower;
+  }
+
+  resolveClick(math.Point clickPosition) {
     List<LevelUp.PhysicsItem> itemsAtPoint = stage.getItemsInZone(
         new math.Rectangle(clickPosition.x, clickPosition.y, 0, 0));
 
@@ -85,12 +102,12 @@ class IA implements LevelUp.StageContactListener {
     for (LevelUp.PhysicsItem physicItem in itemsAtPoint) {
       if (physicItem is LevelUp.PixiPhysicsItem &&
           physicItem.item is Clickable) {
-        Contact contact = stage.getContactBetweenItems(_player, physicItem);
+        Contact contact = _stage.getContactBetweenItems(_player, physicItem);
 
         if (contact != null) {
           _player.item.target = null;
           _player.item.stop();
-          Logger.debug("Attack ${physicItem.item}");
+          _handlePlayerAttacksMob(physicItem);
           return;
         } else {
           _player.item.target = physicItem.item;
@@ -113,7 +130,7 @@ class IA implements LevelUp.StageContactListener {
     if (spriteA.item is Player) {
       if (spriteB.item is Mob) {
         if (_player.item.target == spriteB.item) {
-          Logger.debug("Attack ${spriteB.item}");
+          _handlePlayerAttacksMob(spriteB);
           _player.item.stop();
         }
       } else {
@@ -124,7 +141,7 @@ class IA implements LevelUp.StageContactListener {
     if (spriteB.item is Player) {
       if (spriteA.item is Mob) {
         if (_player.item.target == spriteA.item) {
-          Logger.debug("Attack ${spriteA.item}");
+          _handlePlayerAttacksMob(spriteA);
           _player.item.stop();
         }
       } else {

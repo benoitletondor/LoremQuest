@@ -26,6 +26,7 @@ LevelUp.GameStage stage;
 WorldMap world;
 LevelUp.PixiPhysicsItem<Player> player;
 IA ia;
+LevelUp.PixiItem<PIXI.Text> scoreText;
 
 void main() {
   world = new WorldMap("level1");
@@ -33,7 +34,7 @@ void main() {
     int worldSizeX = configuration.width * Element.SIZE;
     int worldSizeY = configuration.height * Element.SIZE;
 
-    player = new LevelUp.PixiPhysicsItem(new Player())
+    player = new LevelUp.PixiPhysicsItem(new Player(_onPlayerHealthChanged))
       ..position = new PIXI.Point.fromValues(
           configuration.playerX * Element.SIZE,
           configuration.playerY * Element.SIZE);
@@ -73,6 +74,14 @@ void main() {
       stage.addChild(mobItem);
     }
 
+    scoreText = new LevelUp.PixiItem(new PIXI.Text(
+        "Life: ${player.item.health}",
+        new PIXI.TextStyle("24px Arial", tint: 0xFF00FF)))
+      ..position = new PIXI.Point.fromValues(5, 5);
+    stage.addChild(scoreText);
+
+    ia.onStageReady(stage);
+
     html.Rectangle clientRect = stage.view.getBoundingClientRect();
 
     html.window.onResize.listen((e) {
@@ -84,7 +93,11 @@ void main() {
           e.client.x - clientRect.left + stage.cameraX,
           e.client.y - clientRect.top + stage.cameraY);
 
-      ia.resolveClick(clickPosition, stage);
+      ia.resolveClick(clickPosition);
     });
   });
+}
+
+_onPlayerHealthChanged(int health) {
+  scoreText.item.text = "Life: ${health}";
 }

@@ -4,24 +4,29 @@ abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickab
   static const int CATEGORY_BITS = 1 << 3;
   static const int BASE_SPEED = 50;
   static const int BASE_ATTACK_RATE = 1000;
+  static const int BASE_POWER = 10;
 
   MobType _type;
   int _mapX;
   int _mapY;
 
-  Mob(MobType this._type, this._mapX, this._mapY);
+  num lastAttackTime = 0;
+  bool attacking = false;
+  int get speed => BASE_SPEED * _speedMultiplier;
+  double get attackTiming => BASE_ATTACK_RATE / _attackRate;
+  int get attackPower => BASE_POWER * _powerMultiplier;
 
   MobType get type => _type;
   int get mapX => _mapX;
   int get mapY => _mapY;
 
-  int get size;
-  int get speed;
-  int get _attackRate;
+  Mob(MobType this._type, this._mapX, this._mapY);
 
-  num lastAttackTime = 0;
-  bool attacking = false;
-  double get attackTiming => BASE_ATTACK_RATE / _attackRate;
+  int get size;
+  int get _speedMultiplier;
+  int get _attackRate;
+  int get _powerMultiplier;
+  int health;
 
   @override
   Body body;
