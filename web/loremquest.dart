@@ -33,9 +33,18 @@ void main() {
     int worldSizeX = configuration.width * Element.SIZE;
     int worldSizeY = configuration.height * Element.SIZE;
 
+    player = new LevelUp.PixiPhysicsItem(new Player())
+      ..position = new PIXI.Point.fromValues(
+          configuration.playerX * Element.SIZE,
+          configuration.playerY * Element.SIZE);
+
+    List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
+
+    ia = new IA(player, mobs);
+
     stage = new LevelUp.GameStage(
         new LevelUp.PixiRenderer(PIXI.autoDetectRenderer(640, 480)),
-        new _ContactListener(),
+        ia,
         new LevelUp.Camera(
             0, 0, 640, 480, worldSizeX, worldSizeY, LevelUp.CameraAxis.BOTH));
 
@@ -50,17 +59,10 @@ void main() {
     html.querySelector('#debug').append(canvas);
     stage.debugInCanvas(canvas);*/
 
-    player = new LevelUp.PixiPhysicsItem(new Player())
-      ..position = new PIXI.Point.fromValues(
-          configuration.playerX * Element.SIZE,
-          configuration.playerY * Element.SIZE);
-
     stage.setCameraFocus(player, 320, 240);
 
     world.draw(stage);
     stage.addChild(player);
-
-    List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
 
     for (Mob mob in configuration.mobs) {
       LevelUp.PixiPhysicsItem mobItem = new LevelUp.PixiPhysicsItem(mob)
@@ -70,8 +72,6 @@ void main() {
       mobs.add(mobItem);
       stage.addChild(mobItem);
     }
-
-    ia = new IA(player, mobs);
 
     html.Rectangle clientRect = stage.view.getBoundingClientRect();
 
@@ -84,42 +84,7 @@ void main() {
           e.client.x - clientRect.left + stage.cameraX,
           e.client.y - clientRect.top + stage.cameraY);
 
-      List<LevelUp.PhysicsItem> itemsAtPoint = stage.getItemsInZone(
-          new math.Rectangle(clickPosition.x, clickPosition.y, 0, 0));
-
-      for (LevelUp.PhysicsItem physicItem in itemsAtPoint) {
-        if (physicItem is LevelUp.PixiPhysicsItem &&
-            physicItem.item is Clickable) {
-          Logger.debug("Found item: ${physicItem.item}");
-          return;
-        }
-      }
-
-      player.item.moveTo(clickPosition);
+      ia.resolveClick(clickPosition, stage);
     });
   });
-}
-
-class _ContactListener implements LevelUp.StageContactListener {
-  void onContactBegin(
-      LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {
-    if ((spriteA.item is Player) && !(spriteB.item is Mob)) {
-      player.item.stop();
-    }
-
-    if ((spriteB.item is Player) && !(spriteA.item is Mob)) {
-      player.item.stop();
-    }
-
-    if ((spriteA.item is Mob) && !(spriteB.item is Mob)) {
-      spriteA.item.stop();
-    }
-
-    if ((spriteB.item is Mob) && !(spriteA.item is Mob)) {
-      spriteB.item.stop();
-    }
-  }
-
-  void onContactEnd(
-      LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {}
 }

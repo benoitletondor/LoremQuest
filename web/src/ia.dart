@@ -1,6 +1,6 @@
 part of rpg;
 
-class IA {
+class IA implements LevelUp.StageContactListener {
   LevelUp.PixiPhysicsItem<Player> _player;
   List<LevelUp.PixiPhysicsItem<Mob>> _mobs;
   num timeSinceSync = 0.0;
@@ -14,7 +14,7 @@ class IA {
   }
 
   _renderLoop(num dt) {
-    if( dt - timeSinceSync < 100 ) { // No more than once per 100 ms
+    if( dt - timeSinceSync < 200 ) { // No more than once per 200 ms
       return;
     }
 
@@ -50,14 +50,11 @@ class IA {
   MobPosition _getMobPositionVsPlayer(math.Point mobPosition,
       math.Point playerPosition, LevelUp.PixiPhysicsItem<Mob> mob) {
 
-    for (ContactEdge ce = mob.body.getContactList(); ce != null; ce = ce.next) {
-      if (ce.other.userData is LevelUp.PixiPhysicsItem) {
-        LevelUp.PixiPhysicsItem physicItem =
-            ce.other.userData as LevelUp.PixiPhysicsItem;
-        if (physicItem.item is Player) {
-          return MobPosition.TOUCHING;
-        }
-      }
+    // FIXME find a better way to get a stage reference
+    Contact contact = stage.getContactBetweenItems(mob, _player);
+    if( contact != null ) {
+      Logger.debug("${mob.item} attacks Player"); // TODO manage attacks
+      return MobPosition.TOUCHING;
     }
 
     num deltaX = (mobPosition.x - playerPosition.x).abs();
@@ -69,6 +66,76 @@ class IA {
 
     return MobPosition.FAR;
   }
+
+  resolveClick(math.Point clickPosition, LevelUp.GameStage stage) {
+    List<LevelUp.PhysicsItem> itemsAtPoint = stage.getItemsInZone(
+        new math.Rectangle(clickPosition.x, clickPosition.y, 0, 0));
+
+    bool targetFound = false;
+
+    for (LevelUp.PhysicsItem physicItem in itemsAtPoint) {
+      if (physicItem is LevelUp.PixiPhysicsItem &&
+          physicItem.item is Clickable) {
+
+        Contact contact = stage.getContactBetweenItems(_player, physicItem);
+
+        if( contact != null ) {
+          _player.item.target = null;
+          _player.item.stop();
+          Logger.debug("Attack ${physicItem.item}");
+          return;
+        } else {
+          _player.item.target = physicItem.item;
+          targetFound = true;
+          break;
+        }
+      }
+    }
+
+    if( !targetFound ) {
+      _player.item.target = null;
+    }
+
+    _player.item.moveTo(clickPosition);
+  }
+
+  @override
+  void onContactBegin(
+      LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {
+    if ( spriteA.item is Player ) {
+      if( spriteB.item is Mob ) {
+        if( _player.item.target == spriteB.item ) {
+          Logger.debug("Attack ${spriteB.item}");
+          _player.item.stop();
+        }
+      } else {
+        _player.item.stop();
+      }
+    }
+
+    if ( spriteB.item is Player ) {
+      if( spriteA.item is Mob ) {
+        if( _player.item.target == spriteA.item ) {
+          Logger.debug("Attack ${spriteA.item}");
+          _player.item.stop();
+        }
+      } else {
+        _player.item.stop();
+      }
+    }
+
+    if ((spriteA.item is Mob) && !(spriteB.item is Mob)) {
+      spriteA.item.stop();
+    }
+
+    if ((spriteB.item is Mob) && !(spriteA.item is Mob)) {
+      spriteB.item.stop();
+    }
+  }
+
+  @override
+  void onContactEnd(
+      LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {}
 }
 
 enum MobPosition { FAR, NEAR, TOUCHING }

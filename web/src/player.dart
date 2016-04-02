@@ -11,6 +11,7 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
 
   bool _watching = false;
   math.Point _destination;
+  Mob target;
 
   Player() : super() {
     beginFill(0xFF00FF);
