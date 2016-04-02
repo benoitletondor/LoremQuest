@@ -3,6 +3,7 @@ part of rpg;
 abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickable {
   static const int CATEGORY_BITS = 1 << 3;
   static const int BASE_SPEED = 50;
+  static const int BASE_ATTACK_RATE = 1000;
 
   MobType _type;
   int _mapX;
@@ -16,6 +17,11 @@ abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickab
 
   int get size;
   int get speed;
+  int get _attackRate;
+
+  num lastAttackTime = 0;
+  bool attacking = false;
+  double get attackTiming => BASE_ATTACK_RATE / _attackRate;
 
   @override
   Body body;

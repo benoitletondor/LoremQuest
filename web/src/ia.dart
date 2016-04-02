@@ -14,7 +14,8 @@ class IA implements LevelUp.StageContactListener {
   }
 
   _renderLoop(num dt) {
-    if( dt - timeSinceSync < 200 ) { // No more than once per 200 ms
+    if (dt - timeSinceSync < 200) {
+      // No more than once per 200 ms
       return;
     }
 
@@ -44,18 +45,26 @@ class IA implements LevelUp.StageContactListener {
           mob.item.stop();
           break;
       }
+
+      if (mob.item.attacking &&
+          (dt - mob.item.lastAttackTime) >= mob.item.attackTiming) {
+        mob.item.lastAttackTime = dt;
+        Logger.debug("${mob.item} attacks Player");
+      }
     }
   }
 
   MobPosition _getMobPositionVsPlayer(math.Point mobPosition,
       math.Point playerPosition, LevelUp.PixiPhysicsItem<Mob> mob) {
-
     // FIXME find a better way to get a stage reference
     Contact contact = stage.getContactBetweenItems(mob, _player);
-    if( contact != null ) {
-      Logger.debug("${mob.item} attacks Player"); // TODO manage attacks
+    if (contact != null) {
+      mob.item.attacking = true;
       return MobPosition.TOUCHING;
     }
+
+    mob.item.attacking = false;
+    mob.item.lastAttackTime = 0.0;
 
     num deltaX = (mobPosition.x - playerPosition.x).abs();
     num deltaY = (mobPosition.y - playerPosition.y).abs();
@@ -76,10 +85,9 @@ class IA implements LevelUp.StageContactListener {
     for (LevelUp.PhysicsItem physicItem in itemsAtPoint) {
       if (physicItem is LevelUp.PixiPhysicsItem &&
           physicItem.item is Clickable) {
-
         Contact contact = stage.getContactBetweenItems(_player, physicItem);
 
-        if( contact != null ) {
+        if (contact != null) {
           _player.item.target = null;
           _player.item.stop();
           Logger.debug("Attack ${physicItem.item}");
@@ -92,7 +100,7 @@ class IA implements LevelUp.StageContactListener {
       }
     }
 
-    if( !targetFound ) {
+    if (!targetFound) {
       _player.item.target = null;
     }
 
@@ -102,9 +110,9 @@ class IA implements LevelUp.StageContactListener {
   @override
   void onContactBegin(
       LevelUp.Item spriteA, LevelUp.Item spriteB, Contact contact) {
-    if ( spriteA.item is Player ) {
-      if( spriteB.item is Mob ) {
-        if( _player.item.target == spriteB.item ) {
+    if (spriteA.item is Player) {
+      if (spriteB.item is Mob) {
+        if (_player.item.target == spriteB.item) {
           Logger.debug("Attack ${spriteB.item}");
           _player.item.stop();
         }
@@ -113,9 +121,9 @@ class IA implements LevelUp.StageContactListener {
       }
     }
 
-    if ( spriteB.item is Player ) {
-      if( spriteA.item is Mob ) {
-        if( _player.item.target == spriteA.item ) {
+    if (spriteB.item is Player) {
+      if (spriteA.item is Mob) {
+        if (_player.item.target == spriteA.item) {
           Logger.debug("Attack ${spriteA.item}");
           _player.item.stop();
         }

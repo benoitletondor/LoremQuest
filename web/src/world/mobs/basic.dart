@@ -13,4 +13,7 @@ class BasicMob extends Mob {
 
   @override
   int get speed => 1;
+
+  @override
+  int get _attackRate => 1;
 }
