@@ -13,6 +13,7 @@ import 'package:box2d/box2d_browser.dart';
 part 'src/logger.dart';
 part 'src/player.dart';
 part 'src/ia.dart';
+part 'src/animator.dart';
 part 'src/world/worldmap.dart';
 part 'src/world/element.dart';
 part 'src/world/mob.dart';
@@ -20,90 +21,98 @@ part 'src/world/clickable.dart';
 part 'src/world/elements/ground.dart';
 part 'src/world/elements/wall.dart';
 part 'src/world/elements/void.dart';
-part 'src/world/mobs/basic.dart';
+part 'src/world/mobs/spider.dart';
 
 void main() {
   _loadWorld("level1");
 }
 
 _loadWorld(String worldName) {
-  WorldMap world = new WorldMap(worldName);
-  world.load().then((WorldConfiguration configuration) {
-    int worldSizeX = configuration.width * Element.SIZE;
-    int worldSizeY = configuration.height * Element.SIZE;
+  PIXI.Loader loader = new PIXI.Loader.create();
+  loader.add("player", "assets/img/charTexture.png");
+  loader.add("spider", "assets/img/spiderTexture.png");
 
-    LevelUp.PixiPhysicsItem<Player> player =
-        new LevelUp.PixiPhysicsItem(new Player())
-          ..position = new PIXI.Point.fromValues(
-              configuration.playerX * Element.SIZE,
-              configuration.playerY * Element.SIZE);
+  loader.load((PIXI.Loader loader, Map<String, PIXI.Resource> resources) {
+    WorldMap world = new WorldMap(worldName, resources);
+    world.load().then((WorldConfiguration configuration) {
+      int worldSizeX = configuration.width * Element.SIZE;
+      int worldSizeY = configuration.height * Element.SIZE;
 
-    List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
+      LevelUp.PixiPhysicsItem<Player> player = new LevelUp.PixiPhysicsItem(
+          new Player(resources["player"].texture..frame = Player.frames[0]))
+        ..position = new PIXI.Point.fromValues(
+            configuration.playerX * Element.SIZE,
+            configuration.playerY * Element.SIZE);
 
-    IA ia = new IA(player, mobs);
+      List<LevelUp.PixiPhysicsItem<Mob>> mobs = new List();
 
-    LevelUp.GameStage stage = new LevelUp.GameStage(
-        new LevelUp.PixiRenderer(PIXI.autoDetectRenderer(640, 480)),
-        ia,
-        new LevelUp.Camera(
-            0, 0, 640, 480, worldSizeX, worldSizeY, LevelUp.CameraAxis.BOTH));
+      IA ia = new IA(player, mobs);
+      Animator animator = new Animator(player, mobs);
 
-    html.querySelector('#container').append(stage.view);
+      LevelUp.GameStage stage = new LevelUp.GameStage(
+          new LevelUp.PixiRenderer(PIXI.autoDetectRenderer(640, 480)),
+          ia,
+          new LevelUp.Camera(
+              0, 0, 640, 480, worldSizeX, worldSizeY, LevelUp.CameraAxis.BOTH));
 
-    // Activate debug
-    /*html.CanvasElement canvas =
+      html.querySelector('#container').append(stage.view);
+
+      // Activate debug
+      /*html.CanvasElement canvas =
         (new html.Element.tag('canvas') as html.CanvasElement)
           ..width = 640
           ..height = 480;
 
-    html.querySelector('#debug').append(canvas);
-    stage.debugInCanvas(canvas);*/
+      html.querySelector('#debug').append(canvas);
+      stage.debugInCanvas(canvas);*/
 
-    stage.setCameraFocus(player, 320, 240);
+      stage.setCameraFocus(player, 320, 240);
 
-    world.draw(stage);
-    stage.addChild(player);
+      world.draw(stage);
+      stage.addChild(player);
 
-    for (Mob mob in configuration.mobs) {
-      LevelUp.PixiPhysicsItem mobItem = new LevelUp.PixiPhysicsItem(mob)
-        ..position = new PIXI.Point.fromValues(
-            mob.mapX * Element.SIZE, mob.mapY * Element.SIZE);
+      for (Mob mob in configuration.mobs) {
+        LevelUp.PixiPhysicsItem mobItem = new LevelUp.PixiPhysicsItem(mob)
+          ..position = new PIXI.Point.fromValues(
+              mob.mapX * Element.SIZE, mob.mapY * Element.SIZE);
 
-      mobs.add(mobItem);
-      stage.addChild(mobItem);
-    }
-
-    LevelUp.PixiItem<PIXI.Text> scoreText = new LevelUp.PixiItem(new PIXI.Text(
-        "Life: ${Player.BASE_HEALTH}",
-        new PIXI.TextStyle("24px Arial", tint: 0xFF00FF)))
-      ..position = new PIXI.Point.fromValues(5, 5);
-    stage.addChild(scoreText);
-
-    ia.onStageReady(stage);
-
-    html.Rectangle clientRect = stage.view.getBoundingClientRect();
-
-    StreamSubscription resizeSubscription = html.window.onResize.listen((e) {
-      clientRect = stage.view.getBoundingClientRect();
-    });
-
-    StreamSubscription clickSubscription =
-        html.document.onClick.listen((html.MouseEvent e) {
-      math.Point clickPosition = new math.Point(
-          e.client.x - clientRect.left + stage.cameraX,
-          e.client.y - clientRect.top + stage.cameraY);
-
-      ia.resolveClick(clickPosition);
-    });
-
-    player.item.healthListener = ((int health) {
-      if (health <= 0) {
-        _destroyWorld(stage, ia, resizeSubscription, clickSubscription);
-        _loadWorld("level1");
-        return;
+        mobs.add(mobItem);
+        stage.addChild(mobItem);
       }
 
-      scoreText.item.text = "Life: ${health}";
+      LevelUp.PixiItem<PIXI.Text> scoreText = new LevelUp.PixiItem(
+          new PIXI.Text("Life: ${Player.BASE_HEALTH}",
+              new PIXI.TextStyle("24px Arial", tint: 0xFF00FF)))
+        ..position = new PIXI.Point.fromValues(5, 5);
+      stage.addChild(scoreText);
+
+      ia.onStageReady(stage);
+      animator.start();
+
+      html.Rectangle clientRect = stage.view.getBoundingClientRect();
+
+      StreamSubscription resizeSubscription = html.window.onResize.listen((e) {
+        clientRect = stage.view.getBoundingClientRect();
+      });
+
+      StreamSubscription clickSubscription =
+      html.document.onClick.listen((html.MouseEvent e) {
+        math.Point clickPosition = new math.Point(
+            e.client.x - clientRect.left + stage.cameraX,
+            e.client.y - clientRect.top + stage.cameraY);
+
+        ia.resolveClick(clickPosition);
+      });
+
+      player.item.healthListener = ((int health) {
+        if (health <= 0) {
+          _destroyWorld(stage, ia, animator, resizeSubscription, clickSubscription);
+          _loadWorld("level1");
+          return;
+        }
+
+        scoreText.item.text = "Life: ${health}";
+      });
     });
   });
 }
@@ -111,6 +120,7 @@ _loadWorld(String worldName) {
 _destroyWorld(
     LevelUp.GameStage stage,
     IA ia,
+    Animator animator,
     StreamSubscription resizeSubscription,
     StreamSubscription clickSubscription) {
   html.querySelector('#container').children.clear();
@@ -119,5 +129,6 @@ _destroyWorld(
   clickSubscription.cancel();
 
   ia.destroy();
+  animator.destroy();
   stage.destroy();
 }

@@ -14,14 +14,14 @@ class IA implements LevelUp.StageContactListener {
 
   onStageReady(LevelUp.GameStage stage) {
     _stage = stage;
-    LevelUp.RenderingManager.scheduleRenderingAction(_renderLoop);
+    LevelUp.RenderingManager.scheduleRenderingAction(_iaLoop);
   }
 
   destroy() {
-    LevelUp.RenderingManager.unscheduleRenderingAction(_renderLoop);
+    LevelUp.RenderingManager.unscheduleRenderingAction(_iaLoop);
   }
 
-  _renderLoop(num dt) {
+  _iaLoop(num dt) {
     if (dt - timeSinceSync < 200) {
       // No more than once per 200 ms
       return;

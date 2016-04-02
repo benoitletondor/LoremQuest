@@ -3,12 +3,13 @@ part of rpg;
 class WorldMap {
   String _name;
   List<List<Element>> _elements;
+  Map<String, PIXI.Resource> _resources;
 
   List<Mob> _mobs;
   int playerX = 0;
   int playerY = 0;
 
-  WorldMap(String this._name) {}
+  WorldMap(String this._name, Map<String, PIXI.Resource> this._resources) {}
 
   Future<WorldConfiguration> load() async {
     return _processString(
@@ -109,7 +110,8 @@ class WorldMap {
 
     switch (mobKind) {
       case "BASIC":
-        _mobs.add(new BasicMob(x, y));
+        _mobs.add(new SpiderMob(
+            _resources["spider"].texture..frame = SpiderMob.frames[0], x, y));
         break;
       default:
         throw new Exception("Unknown mob kind: $mobKind");

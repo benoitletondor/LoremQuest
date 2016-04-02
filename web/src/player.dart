@@ -2,11 +2,17 @@ part of rpg;
 
 typedef void HealthChangeListener(int health);
 
-class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
+class Player extends PIXI.Sprite implements LevelUp.PhysicsItem {
   static const int CATEGORY_BITS = 0x1;
-  static const int SIZE = 20;
   static const int BASE_HEALTH = 1000;
   static const int BASE_SPEED = 100000;
+
+  static const int FRAME_WIDTH = 66;
+  static List<PIXI.Rectangle> frames = <PIXI.Rectangle>[
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*0, 0, FRAME_WIDTH, 78),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*1, 0, FRAME_WIDTH, 78),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*2, 0, FRAME_WIDTH, 78)
+  ];
 
   @override
   Body body;
@@ -15,30 +21,32 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
   math.Point _destination = null;
   Mob target = null;
 
+  int _frameIndex = 0;
+  num _lastFrameUpdate = 0;
+
   HealthChangeListener _healthListener;
   int _health = BASE_HEALTH;
   int get health => _health;
   set health(int value) {
     _health = value;
-    if( _healthListener != null ) {
+    if (_healthListener != null) {
       _healthListener(value);
     }
   }
 
   int get attackPower => 50;
 
-  Player() : super() {
-    beginFill(0xFF00FF);
-    drawRect(-SIZE / 2, -SIZE / 2, SIZE, SIZE);
+  Player(PIXI.Texture texture) : super(texture) {
+    this.width /= 2;
+    this.height /= 2;
+    this.anchor = new PIXI.Point.fromValues(0.5, 0.5);
   }
 
 // ------------------------------------------------------->
 
   @override
   FixtureDef buildFixtureDef() {
-    double semiSize = (SIZE / 2).toDouble();
-
-    PolygonShape shape = new PolygonShape()..setAsBoxXY(semiSize, semiSize);
+    PolygonShape shape = new PolygonShape()..setAsBoxXY(width / 2, height / 2);
 
     Filter filter = new Filter()
       ..categoryBits = CATEGORY_BITS
@@ -58,7 +66,7 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
     ..fixedRotation = true;
 
   set healthListener(HealthChangeListener listener) =>
-    _healthListener = listener;
+      _healthListener = listener;
 
   stop() {
     _destination = null;
@@ -94,10 +102,22 @@ class Player extends PIXI.Graphics implements LevelUp.PhysicsItem {
             .radianAngleBetween2Objects(_destination, playerPosition);
 
         body.setTransform(body.position, angle);
-        body.linearVelocity = new Vector2(
-            math.sin(angle) * Player.BASE_SPEED,
+        body.linearVelocity = new Vector2(math.sin(angle) * Player.BASE_SPEED,
             -math.cos(angle) * Player.BASE_SPEED);
       }
+    }
+  }
+
+  frameAnimation(num dt) {
+    if (_destination != null && dt - _lastFrameUpdate >= 150) {
+      _lastFrameUpdate = dt;
+
+      _frameIndex++;
+      if( _frameIndex >= frames.length ) {
+        _frameIndex = 0;
+      }
+
+      texture.frame = frames[_frameIndex];
     }
   }
 

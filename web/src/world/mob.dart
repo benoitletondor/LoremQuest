@@ -1,6 +1,7 @@
 part of rpg;
 
-abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickable {
+abstract class Mob extends PIXI.Sprite
+    implements LevelUp.PhysicsItem, Clickable {
   static const int CATEGORY_BITS = 1 << 3;
   static const int BASE_SPEED = 50;
   static const int BASE_ATTACK_RATE = 1000;
@@ -16,17 +17,23 @@ abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickab
   double get attackTiming => BASE_ATTACK_RATE / _attackRate;
   int get attackPower => BASE_POWER * _powerMultiplier;
 
+  int _frameIndex = 0;
+  num _lastFrameUpdate = 0;
+
   MobType get type => _type;
   int get mapX => _mapX;
   int get mapY => _mapY;
 
-  Mob(MobType this._type, this._mapX, this._mapY);
+  Mob(PIXI.Texture texture, MobType this._type, this._mapX, this._mapY)
+      : super(texture) {
+    this.anchor = new PIXI.Point.fromValues(0.5, 0.5);
+  }
 
-  int get size;
   int get _speedMultiplier;
   int get _attackRate;
   int get _powerMultiplier;
   int health;
+  List<PIXI.Rectangle> get _frames;
 
   @override
   Body body;
@@ -38,15 +45,12 @@ abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickab
 
   @override
   FixtureDef buildFixtureDef() {
-    int mobSize = size;
-
-    double semiSize = (mobSize / 2).toDouble();
-
-    PolygonShape shape = new PolygonShape()..setAsBoxXY(semiSize, semiSize);
+    PolygonShape shape = new PolygonShape()..setAsBoxXY(width / 2, height / 2);
 
     Filter filter = new Filter()
       ..categoryBits = CATEGORY_BITS
-      ..maskBits = WallElement.CATEGORY_BITS | Player.CATEGORY_BITS | Mob.CATEGORY_BITS;
+      ..maskBits =
+          WallElement.CATEGORY_BITS | Player.CATEGORY_BITS | Mob.CATEGORY_BITS;
 
     return new FixtureDef()
       ..shape = shape
@@ -63,6 +67,21 @@ abstract class Mob extends PIXI.Graphics implements LevelUp.PhysicsItem, Clickab
 
     if (body.angularVelocity != 0.0) {
       body.angularVelocity = 0.0;
+    }
+  }
+
+  frameAnimation(num dt) {
+    if( body.linearVelocity.x != 0.0 || body.linearVelocity.y != 0.0 ) {
+      if (dt - _lastFrameUpdate >= (100 * _speedMultiplier)) {
+        _lastFrameUpdate = dt;
+
+        _frameIndex++;
+        if( _frameIndex >= _frames.length ) {
+          _frameIndex = 0;
+        }
+
+        texture.frame = _frames[_frameIndex];
+      }
     }
   }
 }
