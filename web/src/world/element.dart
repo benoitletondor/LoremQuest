@@ -1,11 +1,19 @@
 part of rpg;
 
-abstract class Element extends PIXI.Graphics implements LevelUp.PhysicsItem {
+abstract class Element extends PIXI.Sprite implements LevelUp.PhysicsItem {
   static const SIZE = 40;
 
   ElementType _type;
 
-  Element(ElementType this._type) {}
+  Element(PIXI.Texture texture, PIXI.Rectangle frame, ElementType this._type)
+      : super(texture.clone()) {
+    if (frame != null) {
+      this.texture.frame = frame;
+    }
+
+    width = SIZE;
+    height = SIZE;
+  }
 
   ElementType get type => _type;
 

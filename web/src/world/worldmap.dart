@@ -53,13 +53,20 @@ class WorldMap {
       for (Map<String, dynamic> element in line) {
         String type = element["type"];
 
+        PIXI.Rectangle frame = null;
+        if (element.containsKey("frame")) {
+          Map<String, num> frameObject = element["frame"];
+          frame = new PIXI.Rectangle.fromValues(frameObject["x"],
+              frameObject["y"], frameObject["w"], frameObject["h"]);
+        }
+
         Element elem;
         switch (type) {
           case "GROUND":
-            elem = new GroundElement();
+            elem = new GroundElement(_resources["forest"].texture, frame);
             break;
           case 'WALL':
-            elem = new WallElement();
+            elem = new WallElement(_resources["forest"].texture, frame);
             break;
           case 'VOID':
             elem = new VoidElement();
@@ -109,7 +116,7 @@ class WorldMap {
     String mobKind = contained["kind"];
 
     switch (mobKind) {
-      case "BASIC":
+      case "SPIDER":
         _mobs.add(new SpiderMob(
             _resources["spider"].texture..frame = SpiderMob.frames[0], x, y));
         break;

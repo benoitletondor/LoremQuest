@@ -31,6 +31,7 @@ _loadWorld(String worldName) {
   PIXI.Loader loader = new PIXI.Loader.create();
   loader.add("player", "assets/img/charTexture.png");
   loader.add("spider", "assets/img/spiderTexture.png");
+  loader.add("forest", "assets/img/forestTiles.png");
 
   loader.load((PIXI.Loader loader, Map<String, PIXI.Resource> resources) {
     WorldMap world = new WorldMap(worldName, resources);
@@ -81,8 +82,8 @@ _loadWorld(String worldName) {
       }
 
       LevelUp.PixiItem<PIXI.Text> scoreText = new LevelUp.PixiItem(
-          new PIXI.Text("Life: ${Player.BASE_HEALTH}",
-              new PIXI.TextStyle("24px Arial", tint: 0xFF00FF)))
+          new PIXI.Text("Health: ${Player.BASE_HEALTH}",
+              new PIXI.TextStyle("24px Arial", fill: "#FFFFFF")))
         ..position = new PIXI.Point.fromValues(5, 5);
       stage.addChild(scoreText);
 
@@ -111,7 +112,7 @@ _loadWorld(String worldName) {
           return;
         }
 
-        scoreText.item.text = "Life: ${health}";
+        scoreText.item.text = "Health: ${health}";
       });
     });
   });
