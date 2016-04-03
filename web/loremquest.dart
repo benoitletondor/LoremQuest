@@ -125,6 +125,7 @@ _destroyWorld(
     StreamSubscription resizeSubscription,
     StreamSubscription clickSubscription) {
   html.querySelector('#container').children.clear();
+  html.querySelector('#debug').children.clear();
 
   resizeSubscription.cancel();
   clickSubscription.cancel();

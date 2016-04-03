@@ -9,9 +9,9 @@ class Player extends PIXI.Sprite implements LevelUp.PhysicsItem {
 
   static const int FRAME_WIDTH = 66;
   static List<PIXI.Rectangle> frames = <PIXI.Rectangle>[
-    new PIXI.Rectangle.fromValues(FRAME_WIDTH*0, 0, FRAME_WIDTH, 78),
-    new PIXI.Rectangle.fromValues(FRAME_WIDTH*1, 0, FRAME_WIDTH, 78),
-    new PIXI.Rectangle.fromValues(FRAME_WIDTH*2, 0, FRAME_WIDTH, 78)
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*0, 0, FRAME_WIDTH, 65),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*1, 0, FRAME_WIDTH, 65),
+    new PIXI.Rectangle.fromValues(FRAME_WIDTH*2, 0, FRAME_WIDTH, 65)
   ];
 
   @override
@@ -46,7 +46,7 @@ class Player extends PIXI.Sprite implements LevelUp.PhysicsItem {
 
   @override
   FixtureDef buildFixtureDef() {
-    PolygonShape shape = new PolygonShape()..setAsBoxXY(width / 2, height / 2);
+    PolygonShape shape = new PolygonShape()..setAsBoxXY(width / 2 - 6, height / 2 - 5);
 
     Filter filter = new Filter()
       ..categoryBits = CATEGORY_BITS
