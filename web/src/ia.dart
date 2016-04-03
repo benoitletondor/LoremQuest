@@ -111,6 +111,7 @@ class IA implements LevelUp.StageContactListener {
         if (contact != null) {
           _player.item.target = null;
           _player.item.stop();
+          _player.item.lookAt(clickPosition);
           _handlePlayerAttacksMob(physicItem);
           return;
         } else {

@@ -108,6 +108,16 @@ class Player extends PIXI.Sprite implements LevelUp.PhysicsItem {
     }
   }
 
+  lookAt(math.Point point) {
+    math.Point playerPosition =
+    new math.Point(body.position.x, body.position.y);
+
+    num angle = LevelUp.MathHelper
+        .radianAngleBetween2Objects(point, playerPosition);
+
+    body.setTransform(body.position, angle);
+  }
+
   frameAnimation(num dt) {
     if (_destination != null && dt - _lastFrameUpdate >= 150) {
       _lastFrameUpdate = dt;
