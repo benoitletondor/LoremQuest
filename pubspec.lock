@@ -6,7 +6,7 @@ packages:
       name: box2d
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.0"
+    version: "0.3.0"
   browser:
     description:
       name: browser
@@ -36,5 +36,5 @@ packages:
       name: vector_math
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.4.3"
+    version: "2.0.1"
 sdk: ">=1.13.0 <2.0.0"
